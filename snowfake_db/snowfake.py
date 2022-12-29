@@ -1,6 +1,7 @@
+import random
 from typing import Any, Optional
 
-from snowfake_db.exceptions import SnowfakeMissingConfig, SnowfakeDuplicateQuery
+from snowfake_db.exceptions import SnowfakeDuplicateQuery, SnowfakeMissingConfig
 
 EXAMPLE_QUERY = "hello"
 EXAMPLE_RESPONSE = "world"
@@ -32,13 +33,20 @@ class SnowfakeResponse:
     response: dict[Any] -> the data that Snowflake would normally respond with.
     ephemeral: bool -> a flag that denotes whether this is a single-use query.
     """
+
     def __init__(
-        self, query: str, response: dict[Any], ephemeral: bool = False, data: Optional[tuple[Any]] = None
+        self,
+        query: str,
+        response: dict[Any],
+        ephemeral: bool = False,
+        data: Optional[tuple[Any]] = None,
     ):
         self.query: str = query
         self.data: Optional[tuple[Any]] = data
-        self.response: dict[Any] = response
+        self.response: dict[Any] | list[dict[Any]] = response
         self.ephemeral: bool = ephemeral
+        self.sfqid: int = 0
+        self.set_sfqid()
 
     def __str__(self) -> str:
         query = f"{self.query[:30]}..." if len(self.query) > 30 else self.query
@@ -63,6 +71,9 @@ class SnowfakeResponse:
 
         return value
 
+    def set_sfqid(self) -> int:
+        self.sfqid = random.randrange(10000, 60000)
+
 
 class SnowfakeConfig:
     """
@@ -79,8 +90,11 @@ class SnowfakeConfig:
 
     def __init__(self):
         self.query_map: list[SnowfakeResponse] = []
+        self.last_run_query: Optional[SnowfakeResponse] = None
         self.data = {}
-        self.default_response: SnowfakeResponse = SnowfakeResponse(query="", response={})
+        self.default_response: SnowfakeResponse = SnowfakeResponse(
+            query="", response={}
+        )
 
     def lookup_query(self, query, data) -> SnowfakeResponse:
         # We'll separate this into two stages. First, we find all the responses
@@ -91,9 +105,6 @@ class SnowfakeConfig:
 
         if not possible_matches:
             return self.default_response
-
-        if len(possible_matches) == 1:
-            return possible_matches[0]
 
         # If we make it down here, then there are queries that have specific responses
         # and we need to account for that.
@@ -179,7 +190,9 @@ class SnowfakeConfig:
             SnowfakeResponse(query=query, data=data, response=response, ephemeral=False)
         )
 
-    def register_ephemeral(self, query: str, response: dict, data: tuple = None) -> None:
+    def register_ephemeral(
+        self, query: str, response: dict, data: tuple = None
+    ) -> None:
         """
         Works the same way as `SnowfakeConfig.register()` with the only difference being
         that after this query is called, it is removed from the list. This can be used
@@ -193,6 +206,7 @@ class SnowfakeConfig:
     def clear_queries(self):
         """Remove all the registered queries and responses."""
         self.query_map = []
+        self.last_run_query = None
 
 
 class SnowfakeCursor:
@@ -222,30 +236,165 @@ class SnowfakeCursor:
     """
 
     def __init__(self, config: SnowfakeConfig = None) -> None:
-        self.query = None
-        self.data = None
+        self.query: Optional[str] = None
+        self.data: Optional[tuple] = None
+        self.arraysize: int = 10
+
+        # used to keep track of "pagination" in `.fetchmany()`
+        self.last_page_start: int = 0
+        self.last_paginated_query: Optional[int] = None
+
         if not config:
             raise SnowfakeMissingConfig(
                 "If you're making a custom cursor, you will need to"
                 " create a configuration and pass it in here."
             )
-        self.config = config
+        self.config: SnowfakeConfig = config
+
+    @property
+    def sfqid(self) -> Optional[int]:
+        """Retrieve the ID of the last-run query or None."""
+        if self.config.last_run_query:
+            return self.config.last_run_query.sfqid
+        return None
 
     def execute(self, query: str, inserted_data: tuple = None) -> None:
         self.query = query
         self.data = inserted_data
 
+    def execute_async(self, *args, **kwargs):
+        self.execute(*args, **kwargs)
+
     def _get(self) -> dict | list[dict]:
-        return (
-            OVERRIDE_RESPONSE
-            if OVERRIDE_RESPONSE
-            else self.config.remove_ephemeral_response(
-                self.config.lookup_query(self.query, self.data)
-            )
-        )
+        resp = self.config.lookup_query(self.query, self.data)
+        self.config.remove_ephemeral_response(resp)
+        self.config.last_run_query = resp
+        return OVERRIDE_RESPONSE if OVERRIDE_RESPONSE else resp.response
 
-    def fetchone(self) -> dict | list[dict]:
+    def fetchone(self) -> dict:
+        """
+        Return the first result from the saved response for a query.
+
+        `fetchone` takes a pre-saved query and only gives the first piece of data
+        from the response. Example:
+
+        ```python
+        config.register(query="A", response=[{'a':1}, {'b': 2}])
+        with snowfake_cursor() as cursor:
+            cursor.execute("A")
+            resp = cursor.fetchall()
+
+        # resp = {'a':1}
+        ```
+        """
+        resp = self._get()
+        if len(resp) > 1:
+            return resp[0]
         return self._get()
 
-    def fetchall(self) -> dict | list[dict]:
+    def fetchall(self) -> list[dict]:
+        """
+        Return the entire saved response.
+
+        Whereas `fetchone` will only return the first entry from a saved response,
+        `fetchall` does what it sounds like it does. Example:
+
+        ```python
+        config.register(query="A", response=[{'a':1}, {'b': 2}])
+        with snowfake_cursor() as cursor:
+            cursor.execute("A")
+            resp = cursor.fetchall()
+
+        # resp = [{'a':1}, {'b': 2}]
+        ```
+        """
         return self._get()
+
+    def fetchmany(self, size: int = None) -> list[dict]:
+        size = size if size else self.arraysize
+        self._get()
+        if self.last_paginated_query != self.config.last_run_query.sfqid:
+            # this is the first time we're paginating here
+            self.last_page_start = 0
+            self.last_paginated_query = self.config.last_run_query.sfqid
+
+        response = self.config.last_run_query.response[
+            self.last_page_start: size + self.last_page_start
+        ]
+        self.last_page_start += size
+        return response
+
+    def close(self) -> None:
+        """
+        Reset the queries and "close" the connection.
+        """
+        self.config.clear_queries()
+        return
+
+    def get_results_from_sfqid(self, query_id) -> None:
+        """Resets the last-run information to the query in question."""
+        for option in self.config.query_map:
+            if option.sfqid == query_id:
+                self.query = option.query
+                self.data = option.data
+                break
+        else:
+            # setting the query and data to None if the above lookup fails means
+            # that the next fetch will return the default response.
+            self.query = None
+            self.data = None
+
+    def __enter__(self, *args, **kwargs):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
+
+class SnowfakeConn:
+    """
+    Connector to house the Snowfake Cursor object.
+
+    The real Snowflake connector has two methods for interacting with it: either a
+    cursor object directly (`cursor.execute()`) or a `connection` object that is
+    referenced directly (`conn.cursor.execute()`). Since the goal is that this can be
+    a more-or-less drop-in replacement, we provide an optional connector that can be
+    used to spawn the default cursor.
+
+    !!! note "The SnowfakeConn doesn't use the default config!"
+
+        If you want to use this, you will need to configure it through the `config`
+        object that is located on this instance. Example:
+        ```python
+        from snowfake_db import SnowfakeConn
+
+        myconn = SnowfakeConn()
+        myconn.config.register("select * from...", {"MY_EXPECTED": "DATA"})
+        with myconn.cursor() as cursor:
+            ...
+        ```
+    """
+
+    def __init__(self, config: SnowfakeConfig = None):
+        self.config = config if config else SnowfakeConfig()
+
+    def cursor(self):
+        return SnowfakeCursor(self.config)
+
+    def get_query_status(self, *args) -> int:
+        """
+        Check on a currently-running async query.
+
+        Returns 2, the Snowflake QueryStatus Success value.
+        """
+        # https://github.com/snowflakedb/snowflake-connector-python/blob/d957164c5822db5a354baa3aa3366134ed7e98d5/src/snowflake/connector/constants.py#L270-L285
+        return 2  # SUCCESS
+
+    def is_still_running(self, *args) -> bool:
+        """Check long-running async queries. Will always return False."""
+        return False
+
+    def close(self) -> None:
+        """Reset the queries and "close" the connection."""
+        self.config.clear_queries()
+        return

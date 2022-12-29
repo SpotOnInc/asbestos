@@ -36,5 +36,8 @@ profile = "black"
 line_length = 88
 skip_gitignore = "True"
 
+[tool.seed-isort-config]
+known_third_party = ["pytest"]
+
 [tool.pytest.ini_options]
 python_files = "tests.py test_*.py"

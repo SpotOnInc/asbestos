@@ -1,9 +1,13 @@
-from snowfake_db import config, snowfake_cursor
-from snowfake_db.snowfake import SnowfakeCursor, SnowfakeConfig, SnowfakeResponse
-from snowfake_db.exceptions import SnowfakeMissingConfig, SnowfakeDuplicateQuery
-
 import pytest
 
+from snowfake_db import config, conn, snowfake_cursor
+from snowfake_db.exceptions import SnowfakeDuplicateQuery, SnowfakeMissingConfig
+from snowfake_db.snowfake import (
+    SnowfakeConfig,
+    SnowfakeConn,
+    SnowfakeCursor,
+    SnowfakeResponse,
+)
 
 QUERY = "query"
 INVALID_QUERY = "asdf"
@@ -126,3 +130,61 @@ def test_add_ephemeral_and_regular_duplicate_query() -> None:
 def test_cursor_requires_config() -> None:
     with pytest.raises(SnowfakeMissingConfig):
         SnowfakeCursor()
+
+
+def test_conn_cursor_connection() -> None:
+    with conn.cursor() as cursor:
+        conn.config.register(query=QUERY, response=RESPONSE)
+        cursor.execute(QUERY)
+        assert cursor.fetchall() == RESPONSE
+
+
+def test_bare_conn_obj() -> None:
+    new_conn = SnowfakeConn()
+    new_conn.config.register(query=QUERY, response=RESPONSE)
+    with new_conn.cursor() as cursor:
+        cursor.execute(QUERY)
+        assert cursor.fetchall() == RESPONSE
+
+
+def test_async_query() -> None:
+    # This is pulled directly from the documentation:
+    # https://docs.snowflake.com/en/user-guide/python-connector-example.html#checking-the-status-of-a-query
+    cur = conn.cursor()
+    cur.execute_async("select count(*) from table(generator(timeLimit => 25))")
+    # Wait for the query to finish running.
+    query_id = cur.sfqid
+    while conn.is_still_running(conn.get_query_status(query_id)):
+        pass
+
+    cur.get_results_from_sfqid(query_id)
+    assert cur.fetchall() == {}
+
+
+def test_fetchmany() -> None:
+    config.register(
+        query=QUERY,
+        response=[
+            {"a": 1},
+            {"b": 2},
+            {"c": 3},
+            {"d": 4},
+            {"e": 5},
+        ],
+    )
+    with snowfake_cursor() as cursor:
+        cursor.arraysize = 2
+        cursor.execute(QUERY)
+        assert cursor.fetchmany() == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany() == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany() == [{"e": 5}]
+
+
+def test_fetchmany_default_page() -> None:
+    config.register(
+        query=QUERY,
+        response=RESPONSE
+    )
+    with snowfake_cursor() as cursor:
+        cursor.execute(QUERY)
+        assert cursor.fetchmany() == RESPONSE
