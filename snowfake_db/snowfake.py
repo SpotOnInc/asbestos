@@ -261,6 +261,7 @@ class SnowfakeCursor:
     def execute(self, query: str, inserted_data: tuple = None) -> None:
         self.query = query
         self.data = inserted_data
+        self._get()
 
     def execute_async(self, *args, **kwargs):
         self.execute(*args, **kwargs)
@@ -287,7 +288,7 @@ class SnowfakeCursor:
         # resp = {'a':1}
         ```
         """
-        resp = self._get()
+        resp = self.config.last_run_query.response
         if len(resp) > 1:
             return resp[0]
         return self._get()
@@ -308,11 +309,10 @@ class SnowfakeCursor:
         # resp = [{'a':1}, {'b': 2}]
         ```
         """
-        return self._get()
+        return self.config.last_run_query.response
 
     def fetchmany(self, size: int = None) -> list[dict]:
         size = size if size else self.arraysize
-        self._get()
         if self.last_paginated_query != self.config.last_run_query.sfqid:
             # this is the first time we're paginating here
             self.last_page_start = 0
@@ -332,7 +332,7 @@ class SnowfakeCursor:
         return
 
     def get_results_from_sfqid(self, query_id) -> None:
-        """Resets the last-run information to the query in question."""
+        """Resets the last-run information to the given query ID."""
         for option in self.config.query_map:
             if option.sfqid == query_id:
                 self.query = option.query

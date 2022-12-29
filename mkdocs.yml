@@ -1,9 +1,10 @@
-site_name: "Snowfake"
+site_name: "Snowfake DB"
 docs_dir: "docs"
 #site_url: https://example.com/
 nav:
     - Home: index.md
-    - About: about.md
+    - Setup: setup.md
+    - Usage: usage.md
     - Reference: reference.md
 theme:
   name: material
