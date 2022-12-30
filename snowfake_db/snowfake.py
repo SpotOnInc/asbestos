@@ -40,7 +40,7 @@ class SnowfakeResponse:
         response: dict[Any],
         ephemeral: bool = False,
         data: Optional[tuple[Any]] = None,
-    ):
+    ) -> None:
         self.query: str = query
         self.data: Optional[tuple[Any]] = data
         self.response: dict[Any] | list[dict[Any]] = response
@@ -88,7 +88,7 @@ class SnowfakeConfig:
         `snowflake_db.config`.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.query_map: list[SnowfakeResponse] = []
         self.last_run_query: Optional[SnowfakeResponse] = None
         self.data = {}
@@ -96,7 +96,7 @@ class SnowfakeConfig:
             query="", response={}
         )
 
-    def lookup_query(self, query, data) -> SnowfakeResponse:
+    def lookup_query(self, query: str, data: Optional[tuple]) -> SnowfakeResponse:
         # We'll separate this into two stages. First, we find all the responses
         # that _could_ be a match, then we'll filter through those to find the
         # most appropriate match.
@@ -203,7 +203,7 @@ class SnowfakeConfig:
             SnowfakeResponse(query=query, data=data, response=response, ephemeral=True)
         )
 
-    def clear_queries(self):
+    def clear_queries(self) -> None:
         """Remove all the registered queries and responses."""
         self.query_map = []
         self.last_run_query = None
@@ -278,7 +278,7 @@ class SnowfakeCursor:
         self.data = inserted_data
         self._get()
 
-    def execute_async(self, *args, **kwargs):
+    def execute_async(self, *args, **kwargs) -> None:
         """Functions the same as `.execute()`."""
         self.execute(*args, **kwargs)
 
@@ -366,7 +366,7 @@ class SnowfakeCursor:
         self.config.clear_queries()
         return
 
-    def get_results_from_sfqid(self, query_id) -> None:
+    def get_results_from_sfqid(self, query_id: int) -> None:
         """
         Resets the last-run information to the given query ID.
 
@@ -391,10 +391,10 @@ class SnowfakeCursor:
             self.query = None
             self.data = None
 
-    def __enter__(self, *args, **kwargs):
+    def __enter__(self, *args: Any, **kwargs: Any) -> "SnowfakeCursor":
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         pass
 
 
@@ -422,13 +422,13 @@ class SnowfakeConn:
         ```
     """
 
-    def __init__(self, config: SnowfakeConfig = None):
+    def __init__(self, config: SnowfakeConfig = None) -> None:
         self.config = config if config else SnowfakeConfig()
 
-    def cursor(self):
+    def cursor(self) -> SnowfakeCursor:
         return SnowfakeCursor(self.config)
 
-    def get_query_status(self, *args) -> int:
+    def get_query_status(self, *args: Any) -> int:
         """
         Check on a currently-running async query.
 
@@ -437,7 +437,7 @@ class SnowfakeConn:
         # https://github.com/snowflakedb/snowflake-connector-python/blob/d957164c5822db5a354baa3aa3366134ed7e98d5/src/snowflake/connector/constants.py#L270-L285
         return 2  # SUCCESS
 
-    def is_still_running(self, *args) -> bool:
+    def is_still_running(self, *args: Any) -> bool:
         """Check long-running async queries. Will always return False."""
         return False
 
