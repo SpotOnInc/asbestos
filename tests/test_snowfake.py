@@ -192,10 +192,35 @@ def test_fetchmany() -> None:
 
 
 def test_fetchmany_default_page() -> None:
-    config.register(
-        query=QUERY,
-        response=RESPONSE
-    )
+    config.register(query=QUERY, response=RESPONSE)
     with snowfake_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchmany() == RESPONSE
+
+
+def test_documentation_example() -> None:
+    config.register(
+        query="Hello!",
+        response=[
+            {"a": 1},
+            {"b": 2},
+            {"c": 3},
+            {"d": 4},
+            {"e": 5},
+        ],
+    )
+
+    with snowfake_cursor() as cursor:
+        cursor.execute("Hello!")
+        assert cursor.fetchone() == {"a": 1}
+        assert cursor.fetchall() == [
+            {"a": 1},
+            {"b": 2},
+            {"c": 3},
+            {"d": 4},
+            {"e": 5},
+        ]
+        cursor.arraysize = 2
+        assert cursor.fetchmany() == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany() == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany() == [{"e": 5}]

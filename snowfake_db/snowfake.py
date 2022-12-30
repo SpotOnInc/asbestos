@@ -28,7 +28,7 @@ class SnowfakeResponse:
     A SnowfakeResponse has four primary attributes:
 
     query: str -> the raw SQL query that you would pass to Snowflake.
-    data: Optional[tuple[Any]] -> if you use %s substitution, this is your substitution
+    data: Optional[tuple[Any]] -> if you use substitution, this is your substitution
         data.
     response: dict[Any] -> the data that Snowflake would normally respond with.
     ephemeral: bool -> a flag that denotes whether this is a single-use query.
@@ -71,7 +71,7 @@ class SnowfakeResponse:
 
         return value
 
-    def set_sfqid(self) -> int:
+    def set_sfqid(self) -> None:
         self.sfqid = random.randrange(10000, 60000)
 
 
@@ -253,17 +253,33 @@ class SnowfakeCursor:
 
     @property
     def sfqid(self) -> Optional[int]:
-        """Retrieve the ID of the last-run query or None."""
+        """
+        Retrieve the ID of the last-run query or None.
+
+        In Snowflake, the `sfqid` is an ID that's attached to every query
+        that's run. In `snowfake_db`, it's a random number attached to a
+        query. If you pass this value to `get_results_from_sfqid()`, it will
+        reset the cursor to the values from that query to effectively run
+        it again.
+        """
         if self.config.last_run_query:
             return self.config.last_run_query.sfqid
         return None
 
     def execute(self, query: str, inserted_data: tuple = None) -> None:
+        """
+        Pass SQL to `snowfake_db` for processing.
+
+        Saves the SQL and any passed-in data to the cursor and starts the
+        process of finding your pre-saved response. To get the data, you will
+        need to call one of the fetch* methods listed below.
+        """
         self.query = query
         self.data = inserted_data
         self._get()
 
     def execute_async(self, *args, **kwargs):
+        """Functions the same as `.execute()`."""
         self.execute(*args, **kwargs)
 
     def _get(self) -> dict | list[dict]:
@@ -312,6 +328,25 @@ class SnowfakeCursor:
         return self.config.last_run_query.response
 
     def fetchmany(self, size: int = None) -> list[dict]:
+        """
+        Return a paged subset of the saved response.
+
+        Uses `cursor.arraysize` to control the page size or just pass your
+        requested page size into the function: `.fetchmany(200)`. Automatically
+        paginates the response so that you can just keep calling it until you
+        run out of response for it to return. Example:
+
+        ```python
+        config.register(query="A", response=[{'a':1}, {'b': 2}])
+
+        cursor.arraysize = 1  # return one response at a time
+        with snowfake_cursor() as cursor:
+            cursor.execute("A")
+            cursor.fetchmany(1)  # [{'a':1}]
+            cursor.fetchmany(1)  # [{'b': 2}]
+            cursor.fetchmany(1)  # []
+        ```
+        """
         size = size if size else self.arraysize
         if self.last_paginated_query != self.config.last_run_query.sfqid:
             # this is the first time we're paginating here
@@ -319,7 +354,7 @@ class SnowfakeCursor:
             self.last_paginated_query = self.config.last_run_query.sfqid
 
         response = self.config.last_run_query.response[
-            self.last_page_start: size + self.last_page_start
+            self.last_page_start : size + self.last_page_start
         ]
         self.last_page_start += size
         return response
@@ -332,7 +367,19 @@ class SnowfakeCursor:
         return
 
     def get_results_from_sfqid(self, query_id) -> None:
-        """Resets the last-run information to the given query ID."""
+        """
+        Resets the last-run information to the given query ID.
+
+        If you pass a sfqid from a previously-run query, it will rebuild the
+        cursor using the data from that query, effectively allowing you to
+        run the query again without calling `.execute()`.
+
+        !!! warning "Watch out!"
+
+            Ephemeral queries are only recoverable if they are the last query
+            you ran. After you run another query, it will be fully replaced
+            and cannot be recovered via its ID.
+        """
         for option in self.config.query_map:
             if option.sfqid == query_id:
                 self.query = option.query

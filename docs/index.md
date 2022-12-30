@@ -15,4 +15,5 @@ Grab it from PyPi with `pip install snowfake_db` or `poetry add snowfake_db`. Th
 ## Getting started
 
 ### [➡️ Setup](setup.md)
+### [➡️ Usage](usage.md)
 ### [➡️ Reference](reference.md)
