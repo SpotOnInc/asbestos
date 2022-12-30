@@ -1,0 +1,48 @@
+name: Bump Patch Version
+
+on:
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+
+jobs:
+  run:
+    name: Bump Version
+    runs-on: ubuntu-latest
+
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'bump-patch-version') ||
+      contains(github.event.pull_request.labels.*.name, 'bump-minor-version') ||
+      contains(github.event.pull_request.labels.*.name, 'bump-major-version')
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.x
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+
+      - name: Bump patch version
+        run: poetry version patch
+        if: contains(github.event.pull_request.labels.*.name, 'bump-patch-version')
+
+      - name: Bump minor version
+        run: poetry version minor
+        if: contains(github.event.pull_request.labels.*.name, 'bump-minor-version')
+
+      - name: Bump major version
+        run: poetry version major
+        if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          message: Bump version number
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
+          add: 'pyproject.toml'

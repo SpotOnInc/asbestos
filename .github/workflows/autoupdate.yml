@@ -1,0 +1,28 @@
+# Source: https://github.com/marketplace/actions/auto-update
+name: autoupdate
+on:
+  push:
+    branches:
+      - main
+jobs:
+  autoupdate:
+    name: autoupdate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker://chinthakagodawita/autoupdate-action:v1
+        env:
+          MERGE_CONFLICT_ACTION: "ignore"
+          PR_FILTER: "auto_merge"
+          # By using this token instead of GITHUB_TOKEN, it should trigger other workflows
+          # after it.
+          #
+          # ************
+          #   CAUTION
+          # ************
+          #
+          # ALLOWING WORKFLOWS TO TRIGGER OTHER WORKFLOWS CAN POTENTIALLY CREATE A LOOP!
+          # ALWAYS VERIFY THE ACTION YOU ARE CREATING DOES NOT HAVE THIS POSSIBILITY!
+          GITHUB_TOKEN: '${{ secrets.ADMIN_GITHUB_TOKEN }}'
+
+      - run: echo 'Merge conflicts found! Some PRs have not been updated.'
+        if: ${{ steps.autoupdate.outputs.conflicted }}
