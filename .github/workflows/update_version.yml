@@ -77,13 +77,21 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.ref }}
 
+    - name: Set up Python 3.11.x
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11.x
+    - uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+
     - name: Update version number
       run: poetry version "${{ env.new_version }}"
 
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
-        message: ":bookmark: Bump version number"
+        message: ":x: Reset version number"
         committer_name: GitHub Actions
         committer_email: actions@github.com
         add: 'pyproject.toml'
