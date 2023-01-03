@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "snowfake-db"
-version = "0.1.3"
+version = "1.0.0"
 description = "An easy way to mock Snowflake connections in Python!"
 authors = ["Joe Kaufeld <jkaufeld@spoton.com>"]
 readme = "README.md"
