@@ -15,9 +15,9 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'bump-major-version')
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Python 3.11.x
         uses: actions/setup-python@v4
@@ -40,9 +40,10 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
 
       - name: Commit changes
-        uses: EndBug/add-and-commit@v7
+        uses: EndBug/add-and-commit@v9
         with:
-          message: Bump version number
+          message: ":bookmark: Bump version number"
           committer_name: GitHub Actions
           committer_email: actions@github.com
           add: 'pyproject.toml'
+          fetch: false
