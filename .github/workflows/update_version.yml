@@ -42,9 +42,10 @@ jobs:
         run: poetry version major
         if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
 
-      - name: Reset version number - trigger reset_version mob
+      - name: Reset version number - trigger reset_version job
         id: reset_version
         run: echo "run_reset=True" >> $GITHUB_OUTPUT
+        if: contains(github.event.pull_request.labels.*.name, 'reset-version')
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
