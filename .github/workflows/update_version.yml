@@ -40,9 +40,9 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
 
       - name: Commit changes
-        uses: EndBug/add-and-commit@v7
+        uses: EndBug/add-and-commit@v9
         with:
-          message: Bump version number
+          message: ":bookmark: Bump version number"
           committer_name: GitHub Actions
           committer_email: actions@github.com
           add: 'pyproject.toml'
