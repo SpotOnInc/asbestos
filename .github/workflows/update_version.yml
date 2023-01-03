@@ -42,7 +42,7 @@ jobs:
         run: poetry version major
         if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
 
-      - name: Reset version number - trigger conditional job
+      - name: Reset version number - trigger reset_version mob
         id: reset_version
         run: echo "run_reset=True" >> $GITHUB_OUTPUT
 
@@ -56,10 +56,10 @@ jobs:
           add: 'pyproject.toml'
           fetch: false
 
-  conditional_job:
+  reset_version:
     runs-on: 'ubuntu-latest'
     needs: [ check_version_labels ]
-    if: needs.check_version_labels.outputs.run_reset
+    if: needs.check_version_labels.outputs.run_reset == 'True'
     steps:
     - name: Checkout main
       uses: actions/checkout@v3
