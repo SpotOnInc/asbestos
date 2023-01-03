@@ -22,10 +22,7 @@ jobs:
     - id: check_file_changed
       run: |
         # Diff HEAD with the previous commit
-        git diff HEAD^ HEAD | grep -q "+version ="
-        
-        # shellcheck disable=SC2181
-        if [ $? -eq 0 ]
+        if git diff HEAD^ HEAD | grep -q "+version =";
         then
           GOTIME="True"
         else
