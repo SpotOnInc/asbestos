@@ -28,7 +28,7 @@ jobs:
         else
           GOTIME="False"
         fi
-        
+        echo "::notice title=GOTIME::$GOTIME"
         # Set the output named "version_changed"
         echo "version_changed=$GOTIME" >> $GITHUB_OUTPUT
 
