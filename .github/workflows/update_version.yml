@@ -1,18 +1,21 @@
-name: Bump Patch Version
+name: Bump Version
 
 on:
   pull_request:
     types: [opened, reopened, labeled, synchronize]
 
 jobs:
-  run:
+  check_version_labels:
     name: Bump Version
     runs-on: ubuntu-latest
+    outputs:
+      run_reset: ${{ steps.reset_version.outputs.run_reset }}
 
     if: |
       contains(github.event.pull_request.labels.*.name, 'bump-patch-version') ||
       contains(github.event.pull_request.labels.*.name, 'bump-minor-version') ||
-      contains(github.event.pull_request.labels.*.name, 'bump-major-version')
+      contains(github.event.pull_request.labels.*.name, 'bump-major-version') ||
+      contains(github.event.pull_request.labels.*.name, 'reset-version')
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3
@@ -39,11 +42,58 @@ jobs:
         run: poetry version major
         if: contains(github.event.pull_request.labels.*.name, 'bump-major-version')
 
+      - name: Reset version number - trigger reset_version job
+        id: reset_version
+        run: echo "run_reset=True" >> $GITHUB_OUTPUT
+        if: contains(github.event.pull_request.labels.*.name, 'reset-version')
+
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
+        if: "!contains(github.event.pull_request.labels.*.name, 'reset-version')"
         with:
           message: ":bookmark: Bump version number"
           committer_name: GitHub Actions
           committer_email: actions@github.com
           add: 'pyproject.toml'
           fetch: false
+
+  reset_version:
+    runs-on: 'ubuntu-latest'
+    needs: [ check_version_labels ]
+    if: needs.check_version_labels.outputs.run_reset == 'True'
+    steps:
+    - name: Checkout main
+      uses: actions/checkout@v3
+      with:
+        ref: "main"
+
+    - name: Set up Python 3.11.x
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11.x
+    - uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+
+    - name: Get old version number
+      run: |
+        current_version=$(poetry version)
+        IFS=" " read -r -a version_str <<< "$current_version"
+        echo "new_version=${version_str[1]}" >> $GITHUB_ENV
+
+    - name: Checkout PR branch
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Update version number
+      run: poetry version "${{ env.new_version }}"
+
+    - name: Commit changes
+      uses: EndBug/add-and-commit@v9
+      with:
+        message: ":x: Reset version number"
+        committer_name: GitHub Actions
+        committer_email: actions@github.com
+        add: 'pyproject.toml'
+        fetch: false
