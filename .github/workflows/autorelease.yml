@@ -33,7 +33,7 @@ jobs:
         fi
         
         # Set the output named "version_changed"
-        echo "::set-output name=version_changed::$GOTIME"
+        echo "version_changed=$GOTIME" >> $GITHUB_OUTPUT
 
   # Run the job only with "version_changed" equals "True"
   conditional_job:
