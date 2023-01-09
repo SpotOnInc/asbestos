@@ -1,0 +1,25 @@
+name: Static Code Analysis
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout current branch
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set up Python 3.11.x
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11.x
+    - uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+    - name: Install Dependencies
+      run: poetry install
+    - name: Run Static Analysis
+      run: poetry run flake8
