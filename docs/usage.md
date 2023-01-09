@@ -1,10 +1,10 @@
 # Usage
 
-Using `snowfake_db` is as straightforward as we can make it. The general flow looks like this:
+`snowfake_db`'s general flow looks like this:
 
 - insert snowfake cursor in whatever way works best for you
 - inform `snowfake_db` about your queries and what the expected responses are
-- use it as normal!
+- use it normally!
 
 If you use the recommended setup of the `snowfake_cursor()` function, then there are two pieces to juggle: the cursor function and the `config`.
 
