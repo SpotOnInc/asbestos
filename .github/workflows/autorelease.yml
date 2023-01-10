@@ -22,7 +22,7 @@ jobs:
     - id: check_file_changed
       run: |
         # Diff HEAD with the previous commit
-        if git diff HEAD^ HEAD | grep -q "+version =";
+        if git diff HEAD^ HEAD pyproject.toml | grep -q "+version =";
         then
           GOTIME="True"
         else
