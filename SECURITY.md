@@ -25,8 +25,7 @@ Please include as much of the information listed below as you can to help us bet
 
 This information will help us triage your report more quickly.
 
-
-##Safe Harbor Policy:
+## Safe Harbor Policy:
 
 **When conducting vulnerability research according to this policy, we consider this research to be:**
 
