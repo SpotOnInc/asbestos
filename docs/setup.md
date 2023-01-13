@@ -41,7 +41,9 @@ def snowflake_cursor() -> SnowflakeCursor  | Snowfakecursor:
     return snowflake_connection().cursor(DictCursor)
 
 
-def injected_snowflake_cursor(cursor=None) -> SnowflakeCursor:
+def injected_snowflake_cursor(
+        cursor: Optional[SnowfakeCursor] = None
+) -> SnowflakeCursor:
     # If you prefer dependency injection, you can also build it like this!
     return cursor if cursor else snowflake_connection().cursor(DictCursor)
 ```
