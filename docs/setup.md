@@ -32,13 +32,18 @@ def snowflake_connection() -> SnowflakeConnection:
     )
 
 
-def snowflake_cursor() -> SnowflakeCursor:
+def snowflake_cursor() -> SnowflakeCursor  | Snowfakecursor:
     # if ENABLE_SNOWFAKE is set to True, the real cursor will never
     # trigger and the connector will never realize that it has bad
     # data, so we don't have to worry about credentials when testing.
     if settings.ENABLE_SNOWFAKE:
         return snowfake_cursor()
     return snowflake_connection().cursor(DictCursor)
+
+
+def injected_snowflake_cursor(cursor=None) -> SnowflakeCursor:
+    # If you prefer dependency injection, you can also build it like this!
+    return cursor if cursor else snowflake_connection().cursor(DictCursor)
 ```
 
 In normal usage, this allows us to write queries backed by Snowflakes auto-rollback handling that essentially follow this format:
