@@ -1,9 +1,8 @@
 import pytest
 
-from asbestos import config, conn, asbestos_cursor
-from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
+from asbestos import asbestos_cursor, config, conn
 from asbestos.asbestos import AsbestosConn, AsbestosCursor
-
+from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
 
 QUERY = "query"
 INVALID_QUERY = "asdf"
