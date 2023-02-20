@@ -1,8 +1,8 @@
 import pytest
 
-from snowfake_db import config, conn, snowfake_cursor
-from snowfake_db.exceptions import SnowfakeDuplicateQuery, SnowfakeMissingConfig
-from snowfake_db.snowfake import SnowfakeConn, SnowfakeCursor
+from asbestos import config, conn, asbestos_cursor
+from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
+from asbestos.asbestos import AsbestosConn, AsbestosCursor
 
 
 QUERY = "query"
@@ -21,25 +21,25 @@ def run_before_and_after_tests() -> None:
 
 
 def test_generic_start() -> None:
-    with snowfake_cursor() as cursor:
-        assert isinstance(cursor, SnowfakeCursor)
+    with asbestos_cursor() as cursor:
+        assert isinstance(cursor, AsbestosCursor)
 
 
 def test_default_response_fetchone() -> None:
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(INVALID_QUERY)
         assert cursor.fetchone() == {}
 
 
 def test_default_response_fetchall() -> None:
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(INVALID_QUERY)
         assert cursor.fetchall() == {}
 
 
 def test_query_creation() -> None:
     config.register(query=QUERY, response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchall() == RESPONSE
 
@@ -49,7 +49,7 @@ def test_query_creation() -> None:
 
 def test_ephemeral_query_creation() -> None:
     config.register_ephemeral(query=QUERY, response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchall() == RESPONSE
 
@@ -59,7 +59,7 @@ def test_ephemeral_query_creation() -> None:
 
 def test_fetchone_actually_fetches_one() -> None:
     config.register(query=QUERY, response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchone() == RESPONSE[0]
 
@@ -67,7 +67,7 @@ def test_fetchone_actually_fetches_one() -> None:
 def test_query_with_data() -> None:
     resp = {"different": "response"}
     config.register(query=QUERY, data=(1, 2), response=resp)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         # Because we built the query with specific data, just a matching
         # query should return the default response because we don't have
         # the whole equation
@@ -80,7 +80,7 @@ def test_query_with_data() -> None:
 
 def test_query_without_data() -> None:
     config.register(query=QUERY, response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         # The query doesn't have special data, which means if we
         # pass in special data, we should fall down to the generic
         # "yeah the query matches" response.
@@ -96,7 +96,7 @@ def test_queries_with_different_data() -> None:
     # Expected results: a query that matches the saved data should
     # return the special response, but a query with different data
     # should match the base response.
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY, (1, 2))
         assert cursor.fetchall() == resp
 
@@ -106,26 +106,26 @@ def test_queries_with_different_data() -> None:
 
 def test_queries_with_no_base_response() -> None:
     config.register(query=QUERY, data=(1, 2), response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchall() == {}
 
 
 def test_add_duplicate_query() -> None:
-    with pytest.raises(SnowfakeDuplicateQuery):
+    with pytest.raises(AsbestosDuplicateQuery):
         config.register(query=QUERY, response=RESPONSE)
         config.register(query=QUERY, response=RESPONSE)
 
 
 def test_add_ephemeral_and_regular_duplicate_query() -> None:
-    with pytest.raises(SnowfakeDuplicateQuery):
+    with pytest.raises(AsbestosDuplicateQuery):
         config.register(query=QUERY, response=RESPONSE)
         config.register_ephemeral(query=QUERY, response=RESPONSE)
 
 
 def test_cursor_requires_config() -> None:
-    with pytest.raises(SnowfakeMissingConfig):
-        SnowfakeCursor()
+    with pytest.raises(AsbestosMissingConfig):
+        AsbestosCursor()
 
 
 def test_conn_cursor_connection() -> None:
@@ -136,7 +136,7 @@ def test_conn_cursor_connection() -> None:
 
 
 def test_bare_conn_obj() -> None:
-    new_conn = SnowfakeConn()
+    new_conn = AsbestosConn()
     new_conn.config.register(query=QUERY, response=RESPONSE)
     with new_conn.cursor() as cursor:
         cursor.execute(QUERY)
@@ -183,7 +183,7 @@ def test_fetchmany() -> None:
             {"e": 5},
         ],
     )
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.arraysize = 2
         cursor.execute(QUERY)
         assert cursor.fetchmany() == [{"a": 1}, {"b": 2}]
@@ -193,7 +193,7 @@ def test_fetchmany() -> None:
 
 def test_fetchmany_default_page() -> None:
     config.register(query=QUERY, response=RESPONSE)
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchmany() == RESPONSE
 
@@ -210,7 +210,7 @@ def test_documentation_example() -> None:
         ],
     )
 
-    with snowfake_cursor() as cursor:
+    with asbestos_cursor() as cursor:
         cursor.execute("Hello!")
         assert cursor.fetchone() == {"a": 1}
         assert cursor.fetchall() == [

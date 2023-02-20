@@ -1,6 +1,6 @@
 # Setup
 
-Snowflake offers a few different ways to utilize the library depending on the functionality that you need, so `snowfake_db` offers three ways to utilize it.
+Snowflake offers a few different ways to utilize the library depending on the functionality that you need, so `asbestos` offers three ways to utilize it.
 
 - prebuilt cursor context manager
 - prebuilt conn object
@@ -13,7 +13,7 @@ The first two are equal in terms of usability and are intended as drop-in soluti
 The way that we most commonly use Snowflake at SpotOn is by taking advantage of the fact that Snowflake doesn't check credentials until the first call after instantiating the connector and utilizing a helper function to grab the cursor whenever it's needed. Here's a simplified view of what that looks like in practice:
 
 ```python
-from snowfake_db import snowfake_cursor
+from asbestos import asbestos_cursor
 from snowflake import connector as snowflake_connector
 from snowflake.connector.connection import SnowflakeConnection
 from snowflake.connector.cursor import DictCursor, SnowflakeCursor
@@ -32,17 +32,17 @@ def snowflake_connection() -> SnowflakeConnection:
     )
 
 
-def snowflake_cursor() -> SnowflakeCursor  | Snowfakecursor:
-    # if ENABLE_SNOWFAKE is set to True, the real cursor will never
+def snowflake_cursor() -> SnowflakeCursor | AsbestosCursor:
+    # if ENABLE_ASBESTOS is set to True, the real cursor will never
     # trigger and the connector will never realize that it has bad
     # data, so we don't have to worry about credentials when testing.
-    if settings.ENABLE_SNOWFAKE:
-        return snowfake_cursor()
+    if settings.ENABLE_ASBESTOS:
+        return asbestos_cursor()
     return snowflake_connection().cursor(DictCursor)
 
 
 def injected_snowflake_cursor(
-        cursor: Optional[SnowfakeCursor] = None
+        cursor: Optional[AsbestosCursor] = None
 ) -> SnowflakeCursor:
     # If you prefer dependency injection, you can also build it like this!
     return cursor if cursor else snowflake_connection().cursor(DictCursor)
@@ -56,21 +56,21 @@ with snowflake_cursor() as cursor:
     result = cursor.fetchall()
 ```
 
-If you flip the flag for ENABLE_SNOWFAKE (or whatever you want to call the flag in your system), it simply returns the mockable cursor instead, which lets you quickly swap between local development, production, and tests. `snowfake_db` is set up to make this type of usage as easy as possible.
+If you flip the flag for ENABLE_ASBESTOS (or whatever you want to call the flag in your system), it simply returns the mockable cursor instead, which lets you quickly swap between local development, production, and tests. `asbestos` is set up to make this type of usage as easy as possible.
 
 ## Prebuilt Conn Object
 
-Sometimes, especially when working with async queries, you need access to the connection object that spawned the cursor. `snowfake_db` has a connector that it makes available for just this purpose and can be imported as `from snowfake_db import conn`.
+Sometimes, especially when working with async queries, you need access to the connection object that spawned the cursor. `asbestos` has a connector that it makes available for just this purpose and can be imported as `from asbestos import conn`.
 
 When using the prebuilt `conn` object, everything you need to work with the connection is located on that object, including the `cursor` and the `config`, which is a special object we'll touch on in a bit. Here's an example using lightly edited [async code from the Snowflake documentation](https://docs.snowflake.com/en/user-guide/python-connector-example.html#checking-the-status-of-a-query):
 
 ```python
-from snowfake_db import conn
+from asbestos import conn
 
 count_query = "select count(*) from table(generator(timeLimit => 25))"
 count_query_response = {"COUNT": 42}
 
-# tell snowfake to look for this particular query
+# tell asbestos to look for this particular query
 conn.config.register(query=count_query, response=count_query_response)
 
 cur = conn.cursor()
@@ -88,39 +88,39 @@ assert cur.fetchall() == {"COUNT": 42}
 
 !!! warning "Hold on!"
 
-    Creating the `snowfake_db` connections and cursor is possible, but you're probably going to have a worse time. We recommend using one of the two prebuilt options above if you can.
+    Creating the `asbestos` connections and cursor is possible, but you're probably going to have a worse time. We recommend using one of the two prebuilt options above if you can.
 
 While this method isn't recommended, it is possible. You have two methods here of creating your own cursor with varying amounts of usability. 
 
-### Manual Setup with SnowfakeConn
+### Manual Setup with AsbestosConn
 
-The `SnowfakeConn` object is pre-configured to build all the necessary parts automatically when you instantiate it, so the only thing you need to do is import it and instantiate it; then you're good to go!
+The `AsbestosConn` object is pre-configured to build all the necessary parts automatically when you instantiate it, so the only thing you need to do is import it and instantiate it; then you're good to go!
 
 ```python
-from snowfake_db import SnowfakeConn
+from asbestos import AsbestosConn
 
-myconn = SnowfakeConn()
+myconn = AsbestosConn()
 ```
 
-### Manual Setup with SnowfakeCursor
+### Manual Setup with AsbestosCursor
 
-The cursor object is a bit more temperamental and requires the additional setup of a standalone `SnowfakeConfig` object as well, since the `SnowfakeConfig` object controls the cursor. Here's how to set it up:
+The cursor object is a bit more temperamental and requires the additional setup of a standalone `AsbestosConfig` object as well, since the `AsbestosConfig` object controls the cursor. Here's how to set it up:
 
 ```python
 import contextlib
 
-from snowfake_db import SnowfakeConfig, SnowfakeCursor
+from asbestos import AsbestosConfig, AsbestosCursor
 
+myconfig = AsbestosConfig()
 
-myconfig = SnowfakeConfig()
 
 @contextlib.contextmanager
-def snowfake_cursor() -> SnowfakeCursor:
-    yield SnowfakeCursor(myconfig)
+def asbestos_cursor() -> AsbestosCursor:
+    yield AsbestosCursor(myconfig)
 
 
 # Usage:
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute(...)
     ...
 ```

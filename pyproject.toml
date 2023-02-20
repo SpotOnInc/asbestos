@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "snowfake-db"
+name = "asbestos"
 version = "0.1.4"
 description = "An easy way to mock Snowflake connections in Python!"
 authors = ["Joe Kaufeld <jkaufeld@spoton.com>", "SpotOn <opensource@spoton.com>"]
 readme = "README.md"
-packages = [{include = "snowfake_db"}]
+packages = [{include = "asbestos"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
