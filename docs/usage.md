@@ -1,34 +1,34 @@
 # Usage
 
-`snowfake_db`'s general flow looks like this:
+`asbestos`' general flow looks like this:
 
-- insert snowfake cursor in whatever way works best for you
-- inform `snowfake_db` about your queries and what the expected responses are
+- insert the asbestos cursor in whatever way works best for you
+- inform `asbestos` about your queries and what the expected responses are
 - use it normally!
 
-If you use the recommended setup of the `snowfake_cursor()` function, then there are two pieces to juggle: the cursor function and the `config`.
+If you use the recommended setup of the `asbestos_cursor()` function, then there are two pieces to juggle: the cursor function and the `config`.
 
-## `snowfake_db`'s Config
+## The `asbestos` Config
 
 The `config` object keeps track of all the queries that you've saved and a small handful of additional data. The primary method that you'll be using is called `.register()`, and it looks like this:
 
 ```python
-from snowfake_db import config, snowfake_cursor
+from asbestos import config, asbestos_cursor
 
-# This tells snowfake that you're going to pass a base SQL string, and
+# This tells asbestos that you're going to pass a base SQL string, and
 # when it sees that specific string, it should respond with the passed-in
 # value.
 config.register(query="select * from mytable", response={"HELLO": "WORLD"})
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("select * from mytable")
     assert cursor.fetchone() == {"HELLO": "WORLD"}
 ```
 
-You can register as many queries as you want, and they can be as complex as you want (since they're just strings). You can also register queries that look for specific pieces of data! Since `snowflake` allows you to pass in SQL and values to substitute, `snowfake_db` accepts the same.
+You can register as many queries as you want, and they can be as complex as you want (since they're just strings). You can also register queries that look for specific pieces of data! Since `snowflake` allows you to pass in SQL and values to substitute, `asbestos` accepts the same.
 
 ```python
-from snowfake_db import config, snowfake_cursor
+from asbestos import config, asbestos_cursor
 
 config.register(
     query="my very complicated query",
@@ -36,7 +36,7 @@ config.register(
     response={"HELLO": "WORLD"}
 )
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("my very complicated query", (1, 2, 3))
     assert cursor.fetchone() == {"HELLO": "WORLD"}
 ```
@@ -49,7 +49,7 @@ config.register(
     response={"HELLO": "WORLD"}
 )
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("my query!", (1, 2, 3))
     assert cursor.fetchone() == {"HELLO": "WORLD"}
 ```
@@ -63,7 +63,7 @@ config.register(
     response={"HELLO": "WORLD"}
 )
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("my very complicated query")
     assert cursor.fetchone() == {}
 ```
@@ -80,7 +80,7 @@ config.register_ephemeral(
     response={"HELLO": "WORLD"}
 )
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("Shhh, I'll only be available once!")
     # first time it's there...
     assert cursor.fetchone() == {"HELLO": "WORLD"}
@@ -91,6 +91,10 @@ with snowfake_cursor() as cursor:
 ## Resetting the Query List
 
 You can remove all the queries loaded by calling `config.clear_queries()`.
+
+!!! danger "Danger!"
+    
+    This is a destructive action and will wipe all your registered queries and responses in Asbestos.
 
 ## The Cursor
 
@@ -108,7 +112,7 @@ config.register(
     ],
 )
 
-with snowfake_cursor() as cursor:
+with asbestos_cursor() as cursor:
     cursor.execute("Hello!")
     assert cursor.fetchone() == {"a": 1}
     assert cursor.fetchall() == [

@@ -1,28 +1,28 @@
-::: snowfake_db.snowfake_cursor
+::: asbestos.asbestos_cursor
     handler: python
     options:
       show_root_heading: true
       show_source: false
 
-::: snowfake_db.snowfake.SnowfakeConfig
+::: asbestos.asbestos.AsbestosConfig
     handler: python
     options:
       show_root_heading: true
       show_source: false
 
-::: snowfake_db.snowfake.SnowfakeCursor
+::: asbestos.asbestos.AsbestosCursor
     handler: python
     options:
       show_root_heading: true
       show_source: false
 
-::: snowfake_db.snowfake.SnowfakeConn
+::: asbestos.asbestos.AsbestosConn
     handler: python
     options:
       show_root_heading: true
       show_source: false
 
-::: snowfake_db.exceptions
+::: asbestos.exceptions
     handler: python
     options:
       show_root_heading: true
