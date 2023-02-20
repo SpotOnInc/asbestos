@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asbestos"
-version = "1.0.2"
+version = "1.0.3"
 description = "An easy way to mock Snowflake connections in Python!"
 authors = ["Joe Kaufeld <jkaufeld@spoton.com>", "SpotOn <opensource@spoton.com>"]
 readme = "README.md"
