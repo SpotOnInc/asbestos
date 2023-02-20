@@ -38,5 +38,31 @@ jobs:
     needs: [ conditional_job_check_files ]
     if: needs.conditional_job_check_files.outputs.version_changed == 'True'
     steps:
-    - name: Push to PyPI
-      run: echo "This is where we'll put the pypi deploy step"
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+        ref: "main"
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+
+      - name: Build dist
+        run: poetry build
+
+      - name: Get current version number
+        run: |
+          poetry_response=$(poetry version)
+          sliced_version=$(python -c "print('$poetry_response'.split()[1])")
+          echo "version_number=$sliced_version" >> $GITHUB_ENV
+
+      - name: Publish to GitHub
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+          generateReleaseNotes: true
+          tag: ${{ env.version_number }}
+          commit: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to PyPI
+        run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_TOKEN }}
