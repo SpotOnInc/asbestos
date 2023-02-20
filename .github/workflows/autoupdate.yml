@@ -22,7 +22,7 @@ jobs:
           #
           # ALLOWING WORKFLOWS TO TRIGGER OTHER WORKFLOWS CAN POTENTIALLY CREATE A LOOP!
           # ALWAYS VERIFY THE ACTION YOU ARE CREATING DOES NOT HAVE THIS POSSIBILITY!
-          GITHUB_TOKEN: '${{ secrets.ADMIN_GITHUB_TOKEN }}'
+          GITHUB_TOKEN: '${{ secrets.PAT }}'
 
       - run: echo 'Merge conflicts found! Some PRs have not been updated.'
         if: ${{ steps.autoupdate.outputs.conflicted }}
