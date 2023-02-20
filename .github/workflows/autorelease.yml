@@ -61,7 +61,7 @@ jobs:
           artifacts: "dist/*"
           generateReleaseNotes: true
           tag: ${{ env.version_number }}
-          commit: master
+          commit: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push to PyPI
