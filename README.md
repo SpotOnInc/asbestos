@@ -40,6 +40,8 @@ poetry add asbestos
 
 [Check out the documentation here!][docs]
 
+To work on the docs locally, ensure that your `python3` version is up-to-date ([pyenv](https://github.com/pyenv/pyenv) is a great way of managing this) and run `make docs`. This will create a dedicated documentation environment and serve the docs locally for testing. To remove the environment, run `make docs_clean`.
+
 
 [usage]: https://spotoninc.github.io/asbestos/usage
 [docs]: https://spotoninc.github.io/asbestos

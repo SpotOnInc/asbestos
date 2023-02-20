@@ -48,7 +48,7 @@ def injected_snowflake_cursor(
     return cursor if cursor else snowflake_connection().cursor(DictCursor)
 ```
 
-In normal usage, this allows us to write queries backed by Snowflakes auto-rollback handling that essentially follow this format:
+In normal usage, this allows us to write queries backed by Snowflake's auto-rollback handling that essentially follow this format:
 
 ```python
 with snowflake_cursor() as cursor:

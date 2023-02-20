@@ -8,7 +8,7 @@
 
 If you use the recommended setup of the `asbestos_cursor()` function, then there are two pieces to juggle: the cursor function and the `config`.
 
-## `asbestos`' Config
+## The `asbestos` Config
 
 The `config` object keeps track of all the queries that you've saved and a small handful of additional data. The primary method that you'll be using is called `.register()`, and it looks like this:
 
@@ -91,6 +91,10 @@ with asbestos_cursor() as cursor:
 ## Resetting the Query List
 
 You can remove all the queries loaded by calling `config.clear_queries()`.
+
+!!! danger "Danger!"
+    
+    This is a destructive action and will wipe all your registered queries and responses in Asbestos.
 
 ## The Cursor
 
