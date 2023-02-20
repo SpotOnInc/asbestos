@@ -41,7 +41,7 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@v3
         with:
-        ref: "main"
+          ref: "main"
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
