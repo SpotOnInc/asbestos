@@ -30,7 +30,7 @@ jobs:
           #
           # ALLOWING WORKFLOWS TO TRIGGER OTHER WORKFLOWS CAN POTENTIALLY CREATE A LOOP!
           # ALWAYS VERIFY THE ACTION YOU ARE CREATING DOES NOT HAVE THIS POSSIBILITY!
-          token: '${{ secrets.ADMIN_GITHUB_TOKEN }}'
+          token: '${{ secrets.PAT }}'
 
       - name: Set up Python 3.11.x
         uses: actions/setup-python@v4
@@ -113,7 +113,7 @@ jobs:
         #
         # ALLOWING WORKFLOWS TO TRIGGER OTHER WORKFLOWS CAN POTENTIALLY CREATE A LOOP!
         # ALWAYS VERIFY THE ACTION YOU ARE CREATING DOES NOT HAVE THIS POSSIBILITY!
-        token: '${{ secrets.ADMIN_GITHUB_TOKEN }}'
+        token: '${{ secrets.PAT }}'
 
     - name: Update version number
       run: poetry version "${{ env.new_version }}"
