@@ -42,6 +42,18 @@ poetry add asbestos
 
 To work on the docs locally, ensure that your `python3` version is up-to-date ([pyenv](https://github.com/pyenv/pyenv) is a great way of managing this) and run `make docs`. This will create a dedicated documentation environment and serve the docs locally for testing. To remove the environment, run `make docs_clean`.
 
+## Development
+
+`asbestos` uses `pre-commit` to help us keep the repo clean. To get started, make sure [you have `poetry` installed](https://python-poetry.org/) and follow these steps:
+
+* clone the respository:
+  * `git clone git@github.com:SpotOnInc/asbestos.git` (preferred)
+  * OR `git clone https://github.com/SpotOnInc/asbestos`
+* `poetry install`
+* `poetry shell`
+* `pre-commit install`
+
+After that, you're ready to go!
 
 [usage]: https://spotoninc.github.io/asbestos/usage/
 [docs]: https://spotoninc.github.io/asbestos/
