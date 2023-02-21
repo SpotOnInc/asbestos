@@ -21,5 +21,7 @@ jobs:
       run: |
         poetry install
     - name: Run Tests
+      # force a TTY for color support
+      shell: 'script --return --quiet --command "bash {0}"'
       run: |
         poetry run pytest
