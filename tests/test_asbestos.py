@@ -7,6 +7,30 @@ from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
 QUERY = "query"
 INVALID_QUERY = "asdf"
 RESPONSE = [{"response": "hi"}, {"hello there": "general kenobi"}]
+SHORT_BATCH_RESPONSE = [
+    {"a": 1},
+    {"b": 2},
+    {"c": 3},
+    {"d": 4},
+    {"e": 5},
+]
+LARGE_BATCH_RESPONSE = [
+    {"a": 1},
+    {"b": 2},
+    {"c": 3},
+    {"d": 4},
+    {"e": 5},
+    {"f": 6},
+    {"g": 7},
+    {"h": 8},
+    {"i": 9},
+    {"j": 10},
+    {"k": 11},
+    {"l": 12},
+    {"m": 13},
+    {"n": 14},
+    {"o": 15},
+]
 
 
 @pytest.fixture(autouse=True)
@@ -174,13 +198,7 @@ def test_async_query_registered_response() -> None:
 def test_fetchmany() -> None:
     config.register(
         query=QUERY,
-        response=[
-            {"a": 1},
-            {"b": 2},
-            {"c": 3},
-            {"d": 4},
-            {"e": 5},
-        ],
+        response=SHORT_BATCH_RESPONSE,
     )
     with asbestos_cursor() as cursor:
         cursor.arraysize = 2
@@ -190,11 +208,58 @@ def test_fetchmany() -> None:
         assert cursor.fetchmany() == [{"e": 5}]
 
 
-def test_fetchmany_default_page() -> None:
-    config.register(query=QUERY, response=RESPONSE)
+def test_fetchmany_with_value_in_call() -> None:
+    config.register(
+        query=QUERY,
+        response=SHORT_BATCH_RESPONSE,
+    )
     with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
-        assert cursor.fetchmany() == RESPONSE
+        assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany(2) == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany(2) == [{"e": 5}]
+
+
+def test_fetchmany_default_page() -> None:
+    config.register(query=QUERY, response=LARGE_BATCH_RESPONSE)
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        assert cursor.fetchmany() == LARGE_BATCH_RESPONSE[:10]
+
+
+def test_fetchmany_local_size_overrides_arraysize() -> None:
+    config.register(
+        query=QUERY,
+        response=SHORT_BATCH_RESPONSE,
+    )
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        cursor.arraysize = 10
+        assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany(2) == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany(2) == [{"e": 5}]
+
+
+def test_fetchmany_force_pagination_size() -> None:
+    config.register(query=QUERY, response=SHORT_BATCH_RESPONSE, force_pagination_size=2)
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        cursor.arraysize = 10
+        assert cursor.fetchmany(5) == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany(5) == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany(5) == [{"e": 5}]
+
+
+def test_fetchmany_force_pagination_size_ephemeral() -> None:
+    config.register_ephemeral(
+        query=QUERY, response=SHORT_BATCH_RESPONSE, force_pagination_size=2
+    )
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        cursor.arraysize = 10
+        assert cursor.fetchmany(5) == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany(5) == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany(5) == [{"e": 5}]
 
 
 def test_documentation_example() -> None:
