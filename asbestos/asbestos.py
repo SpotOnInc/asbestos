@@ -40,12 +40,14 @@ class AsbestosResponse:
         response: dict[Any],
         ephemeral: bool = False,
         data: Optional[tuple[Any]] = None,
+        force_pagination_size: Optional[int] = None,
     ) -> None:
         self.query: str = query
         self.data: Optional[tuple[Any]] = data
         self.response: dict[Any] | list[dict[Any]] = response
         self.ephemeral: bool = ephemeral
         self.sfqid: int = 0
+        self.force_pagination_size = force_pagination_size
         self.set_sfqid()
 
     def __str__(self) -> str:
@@ -143,7 +145,13 @@ class AsbestosConfig:
                     )
                 raise AsbestosDuplicateQuery("You've already registered this query!")
 
-    def register(self, query: str, response: dict, data: tuple = None) -> None:
+    def register(
+        self,
+        query: str,
+        response: dict,
+        data: tuple = None,
+        force_pagination_size: int = None,
+    ) -> None:
         """
         Asbestos will watch for any call that includes the query passed in
         and return the response you save. If data is provided with the query,
@@ -184,14 +192,41 @@ class AsbestosConfig:
         >>> cursor.fetchone()
         {}  # default response
         ```
+
+        If you're dealing with a `fetchmany()` call and need to control
+        how many results are returned regardless of what the code requests,
+        pass the return count into `force_pagination_size`. This will override
+        both `cursor.arraysize` and the number passed into `fetchmany`.
+
+        ```python
+        >>> config.register(
+        ...     query="A",
+        ...     response=[{'a': 1}, {'b': 2}],
+        ...     force_pagination_size=1
+        ... )
+        >>> cursor.execute("A")
+        >>> cursor.fetchmany(50)
+        {'a': 1}  # because we overrode the value when registering
+
+        ```
         """
         self.check_for_duplicates(query=query, data=data, ephemeral=False)
         self.query_map.append(
-            AsbestosResponse(query=query, data=data, response=response, ephemeral=False)
+            AsbestosResponse(
+                query=query,
+                data=data,
+                response=response,
+                ephemeral=False,
+                force_pagination_size=force_pagination_size,
+            )
         )
 
     def register_ephemeral(
-        self, query: str, response: dict, data: tuple = None
+        self,
+        query: str,
+        response: dict,
+        data: tuple = None,
+        force_pagination_size: int = None,
     ) -> None:
         """
         Works the same way as `AsbestosConfig.register()` with the only difference being
@@ -200,7 +235,13 @@ class AsbestosConfig:
         """
         self.check_for_duplicates(query=query, data=data, ephemeral=True)
         self.query_map.append(
-            AsbestosResponse(query=query, data=data, response=response, ephemeral=True)
+            AsbestosResponse(
+                query=query,
+                data=data,
+                response=response,
+                ephemeral=True,
+                force_pagination_size=force_pagination_size,
+            )
         )
 
     def clear_queries(self) -> None:
@@ -342,16 +383,22 @@ class AsbestosCursor:
         cursor.arraysize = 1  # return one response at a time
         with asbestos_cursor() as cursor:
             cursor.execute("A")
-            cursor.fetchmany(1)  # [{'a':1}]
-            cursor.fetchmany(1)  # [{'b': 2}]
-            cursor.fetchmany(1)  # []
+            cursor.fetchmany()  # [{'a':1}]
+            cursor.fetchmany()  # [{'b': 2}]
+            cursor.fetchmany()  # []
+
+        Note: a value passed directly into `fetchmany` overrides the
+        `cursor.arraysize`, and both of them are overridden by registering
+        the query with `force_pagination_size`.
         ```
         """
         size = size if size else self.arraysize
         if self.last_paginated_query != self.config.last_run_query.sfqid:
             # this is the first time we're paginating here
             self.last_page_start = 0
-            self.last_paginated_query = self.config.last_run_query.sfqid
+            self.last_paginated_query: int = self.config.last_run_query.sfqid
+        if query_forced_page_size := self.config.last_run_query.force_pagination_size:
+            size = query_forced_page_size
 
         response = self.config.last_run_query.response[
             self.last_page_start : size + self.last_page_start
