@@ -340,7 +340,7 @@ class AsbestosCursor:
         config.register(query="A", response=[{'a':1}, {'b': 2}])
         with asbestos_cursor() as cursor:
             cursor.execute("A")
-            resp = cursor.fetchall()
+            resp = cursor.fetchone()
 
         # resp = {'a':1}
         ```
