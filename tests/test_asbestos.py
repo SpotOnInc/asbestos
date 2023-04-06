@@ -1,12 +1,15 @@
 import pytest
 
 from asbestos import asbestos_cursor, config, conn
+import asbestos.asbestos
 from asbestos.asbestos import AsbestosConn, AsbestosCursor
 from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
 
 QUERY = "query"
+QUERY2 = "another query"
 INVALID_QUERY = "asdf"
 RESPONSE = [{"response": "hi"}, {"hello there": "general kenobi"}]
+OVERRIDE_RESPONSE = "Hi!"
 SHORT_BATCH_RESPONSE = [
     {"a": 1},
     {"b": 2},
@@ -288,3 +291,70 @@ def test_documentation_example() -> None:
         assert cursor.fetchmany() == [{"a": 1}, {"b": 2}]
         assert cursor.fetchmany() == [{"c": 3}, {"d": 4}]
         assert cursor.fetchmany() == [{"e": 5}]
+
+
+def test_fetchmany_with_bad_query() -> None:
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchmany() == {}
+
+
+def test_override_response_fetchone() -> None:
+    asbestos.asbestos.OVERRIDE_RESPONSE = OVERRIDE_RESPONSE
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchone() == OVERRIDE_RESPONSE
+
+
+def test_override_response_fetchall() -> None:
+    asbestos.asbestos.OVERRIDE_RESPONSE = OVERRIDE_RESPONSE
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchall() == OVERRIDE_RESPONSE
+
+    asbestos.asbestos.OVERRIDE_RESPONSE = None
+
+
+def test_override_response_fetchmany_with_str() -> None:
+    asbestos.asbestos.OVERRIDE_RESPONSE = OVERRIDE_RESPONSE
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchmany() == OVERRIDE_RESPONSE
+
+    asbestos.asbestos.OVERRIDE_RESPONSE = None
+
+
+def test_override_response_fetchmany_with_iterable() -> None:
+    asbestos.asbestos.OVERRIDE_RESPONSE = [{"hi": "there"}]
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchmany() == [{"hi": "there"}]
+
+    asbestos.asbestos.OVERRIDE_RESPONSE = None
+
+
+def test_override_response_fetchmany_large_iterable() -> None:
+    asbestos.asbestos.OVERRIDE_RESPONSE = LARGE_BATCH_RESPONSE
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(INVALID_QUERY)
+        assert cursor.fetchmany() == LARGE_BATCH_RESPONSE
+
+    asbestos.asbestos.OVERRIDE_RESPONSE = None
+
+
+def test_fetchmany_after_other_call() -> None:
+    config.register(query=QUERY, response=RESPONSE)
+    config.register(query=QUERY2, response=LARGE_BATCH_RESPONSE)
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        assert cursor.fetchall() == RESPONSE
+
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY2)
+        assert cursor.fetchmany() == LARGE_BATCH_RESPONSE[: cursor.arraysize]

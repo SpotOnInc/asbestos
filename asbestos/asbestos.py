@@ -317,15 +317,16 @@ class AsbestosCursor:
         """
         self.query = query
         self.data = inserted_data
-        self._get()
+        self._get(remove_ephemeral=False)
 
     def execute_async(self, *args, **kwargs) -> None:
         """Functions the same as `.execute()`."""
         self.execute(*args, **kwargs)
 
-    def _get(self) -> dict | list[dict]:
+    def _get(self, remove_ephemeral: bool = True) -> dict | list[dict]:
         resp = self.config.lookup_query(self.query, self.data)
-        self.config.remove_ephemeral_response(resp)
+        if remove_ephemeral:
+            self.config.remove_ephemeral_response(resp)
         self.config.last_run_query = resp
         return OVERRIDE_RESPONSE if OVERRIDE_RESPONSE else resp.response
 
@@ -366,7 +367,7 @@ class AsbestosCursor:
         # resp = [{'a':1}, {'b': 2}]
         ```
         """
-        return self.config.last_run_query.response
+        return self._get()
 
     def fetchmany(self, size: int = None) -> list[dict]:
         """
@@ -400,11 +401,20 @@ class AsbestosCursor:
         if query_forced_page_size := self.config.last_run_query.force_pagination_size:
             size = query_forced_page_size
 
-        response = self.config.last_run_query.response[
-            self.last_page_start : size + self.last_page_start
-        ]
-        self.last_page_start += size
-        return response
+        resp = self._get(remove_ephemeral=False)
+        if resp == OVERRIDE_RESPONSE:
+            # shortcut if the override has manually been set
+            return resp
+
+        # everything this normally handles should be one of these types.
+        if resp and isinstance(resp, (list, tuple)):
+            response = resp[self.last_page_start : size + self.last_page_start]
+            self.last_page_start += size
+            if len(response) == 0:
+                self.config.remove_ephemeral_response(self.config.last_run_query)
+            return response
+        self.config.remove_ephemeral_response(self.config.last_run_query)
+        return resp  # type: ignore
 
     def close(self) -> None:
         """
