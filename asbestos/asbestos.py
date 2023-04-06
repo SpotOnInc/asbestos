@@ -367,7 +367,12 @@ class AsbestosCursor:
         # resp = [{'a':1}, {'b': 2}]
         ```
         """
-        return self._get()
+        resp = self._get()
+        return (
+            list(resp)
+            if not isinstance(resp, list) and resp != OVERRIDE_RESPONSE
+            else resp
+        )
 
     def fetchmany(self, size: int = None) -> list[dict]:
         """
@@ -414,7 +419,7 @@ class AsbestosCursor:
                 self.config.remove_ephemeral_response(self.config.last_run_query)
             return response
         self.config.remove_ephemeral_response(self.config.last_run_query)
-        return resp  # type: ignore
+        return list(resp) if not isinstance(resp, list) else resp
 
     def close(self) -> None:
         """
