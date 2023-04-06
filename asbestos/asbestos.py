@@ -368,11 +368,9 @@ class AsbestosCursor:
         ```
         """
         resp = self._get()
-        return (
-            list(resp)
-            if not isinstance(resp, list) and resp != OVERRIDE_RESPONSE
-            else resp
-        )
+        if not isinstance(resp, list) and resp != OVERRIDE_RESPONSE:
+            return list(resp)
+        return resp
 
     def fetchmany(self, size: int = None) -> list[dict]:
         """
