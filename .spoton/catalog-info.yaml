@@ -1,0 +1,32 @@
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: asbestos
+  description: | 
+    An easy way to mock Snowflake connections in Python!
+  
+  annotations:
+    github.com/project-slug: spotoninc/asbestos
+  
+  tags:
+    - python # language
+  links:
+    
+    - title: "JIRA board"
+      type: project-management
+      url: https://spotonteam.atlassian.net/browse/PAYOPS
+      icon: help
+      
+    - title: "Slack (#theseus)"
+      type: contact
+      url: https://spoton.slack.com/archives/C01V2NVBPTP
+      icon: chat
+      
+    - title: "Docs"
+      type: other
+      url: https://spotoninc.github.io/asbestos/
+spec:
+  type: library
+  owner: group:default/payment-operations
+  lifecycle: production
