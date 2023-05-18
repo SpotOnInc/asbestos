@@ -1,5 +1,5 @@
 import random
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
 
@@ -44,7 +44,7 @@ class AsbestosResponse:
     ) -> None:
         self.query: str = query
         self.data: Optional[tuple[Any]] = data
-        self.response: dict[Any] | list[dict[Any]] = response
+        self.response: Union[dict[Any], list[dict[Any]]] = response
         self.ephemeral: bool = ephemeral
         self.sfqid: int = 0
         self.force_pagination_size = force_pagination_size
@@ -323,7 +323,7 @@ class AsbestosCursor:
         """Functions the same as `.execute()`."""
         self.execute(*args, **kwargs)
 
-    def _get(self, remove_ephemeral: bool = True) -> dict | list[dict]:
+    def _get(self, remove_ephemeral: bool = True) -> Union[dict, list[dict]]:
         resp = self.config.lookup_query(self.query, self.data)
         if remove_ephemeral:
             self.config.remove_ephemeral_response(resp)
