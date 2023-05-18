@@ -3,7 +3,7 @@ An easy way to mock Snowflake connections in Python!
 
 ## What is this?
 
-`asbestos` is a library to allow easy mocking of Snowflake calls during local development or testing to save on costs and time. The docs have more information, but here's a quick example:
+`asbestos` is a library for Python 3.9+ to allow easy mocking of Snowflake calls during local development or testing to save on costs and time. The docs have more information, but here's a quick example:
 
 ```python
 from asbestos import asbestos_cursor, config as asbestos_config

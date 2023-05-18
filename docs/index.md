@@ -10,7 +10,7 @@ A mock data system for [Snowflake](https://www.snowflake.com/en/). Test your cod
 
 ## Installation
 
-Grab it from PyPI with `pip install asbestos-snow` or `poetry add asbestos-snow`. This is a pure Python package and has no required dependencies of its own. Asbestos takes advantage of modern language features and only supports Python 3.10+.
+Grab it from PyPI with `pip install asbestos-snow` or `poetry add asbestos-snow`. This is a pure Python package and has no required dependencies of its own. Asbestos takes advantage of modern language features and only supports Python 3.9+.
 
 !!! note
 
