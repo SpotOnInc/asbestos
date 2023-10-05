@@ -346,7 +346,6 @@ def test_override_response_fetchmany_with_iterable() -> None:
 
 @set_override_response(LARGE_BATCH_RESPONSE)
 def test_override_response_fetchmany_large_iterable() -> None:
-
     with asbestos_cursor() as cursor:
         cursor.execute(INVALID_QUERY)
         assert cursor.fetchmany() == LARGE_BATCH_RESPONSE
