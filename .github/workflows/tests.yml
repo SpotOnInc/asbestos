@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: medium
     strategy:
       # By default, GitHub will maximize the number of jobs run in parallel
       # depending on the available runners on GitHub-hosted virtual machines.
@@ -20,20 +20,20 @@ jobs:
           - python-version: "3.12"
 
     steps:
-    - name: Checkout current branch
-      uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - uses: snok/install-poetry@v1
-      with:
-        virtualenvs-create: true
-    - name: Install Dependencies
-      run: |
-        poetry install
-    - name: Run Tests
+      - name: Checkout current branch
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+      - name: Install Dependencies
+        run: |
+          poetry install
+      - name: Run Tests
       # force a TTY for color support
-      shell: 'script --return --quiet --command "bash {0}"'
-      run: |
-        poetry run pytest
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: |
+          poetry run pytest
