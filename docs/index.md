@@ -5,7 +5,7 @@ A mock data system for [Snowflake](https://www.snowflake.com/en/). Test your cod
 `asbestos` was developed in-house at [SpotOn](https://www.spoton.com/) to solve easy mocking of Snowflake calls across multiple codebases. It fits our use case fully, but if it doesn't implement something you need, we're happy to take pull requests!
 
 !!! info "Why 'Asbestos'?"
-    
+
     In the classic film _The Wizard of Oz_, the fake snow that they use in the poppy field [is pure asbestos](https://movieweb.com/wizard-of-oz-snow-asbestos/). Thankfully there are much better ways of generating fake snow now that are much less carcinogenic -- most modern fake snow is made from paper byproducts and dyed cellulose fibers!
 
 ## Installation

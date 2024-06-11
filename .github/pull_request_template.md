@@ -1,5 +1,5 @@
 <!-- Put the GitHub issue number or Jira ticket ID here! -->
-Ticket: 
+Ticket:
 
 ## Description:
 <!-- What does this PR do? Why are we opening it? -->

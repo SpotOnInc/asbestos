@@ -90,7 +90,7 @@ assert cur.fetchall() == {"COUNT": 42}
 
     Creating the `asbestos` connections and cursor is possible, but you're probably going to have a worse time. We recommend using one of the two prebuilt options above if you can.
 
-While this method isn't recommended, it is possible. You have two methods here of creating your own cursor with varying amounts of usability. 
+While this method isn't recommended, it is possible. You have two methods here of creating your own cursor with varying amounts of usability.
 
 ### Manual Setup with AsbestosConn
 

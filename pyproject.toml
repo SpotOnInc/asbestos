@@ -22,16 +22,15 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pytest = "^7.4.2"
+pytest = "^8.2.2"
 
 [tool.poetry.group.dev.dependencies]
-isort = "^5.11.4"
+isort = "^5.13.2"
 seed-isort-config = "^2.2.0"
-pytest = "^7.4.2"
 pdbpp = "^0.10.3"
-ruff = "^0.0.249"
-pre-commit = "^3.0.4"
-black = ">=23.9.1,<25.0.0"
+ruff = "^0.4.8"
+pre-commit = "^3.7.1"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core"]
