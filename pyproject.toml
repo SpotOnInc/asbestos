@@ -22,7 +22,6 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pytest = "^8.2.2"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
@@ -31,6 +30,7 @@ pdbpp = "^0.10.3"
 ruff = "^0.4.8"
 pre-commit = "^3.7.1"
 black = "^24.4.2"
+pytest = "^8.2.2"
 
 [build-system]
 requires = ["poetry-core"]
