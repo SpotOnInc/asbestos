@@ -93,7 +93,7 @@ with asbestos_cursor() as cursor:
 You can remove all the queries loaded by calling `config.clear_queries()`.
 
 !!! danger "Danger!"
-    
+
     This is a destructive action and will wipe all your registered queries and responses in Asbestos.
 
 ## The Cursor
