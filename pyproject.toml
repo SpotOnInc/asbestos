@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "asbestos-snow"
+name = "asbestos"
 version = "1.4.0"
 description = "An easy way to mock Snowflake connections in Python!"
 authors = ["Joe Kaufeld <jkaufeld@spoton.com>", "SpotOn <opensource@spoton.com>"]
 readme = "README.md"
 packages = [{include = "asbestos"}]
+exclude = ["stub"]
 repository = "https://github.com/spotoninc/asbestos"
 documentation = "https://spotoninc.github.io/asbestos"
 classifiers = [
