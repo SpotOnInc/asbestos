@@ -66,3 +66,12 @@ jobs:
 
       - name: Push to PyPI
         run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_TOKEN }}
+
+      - name: Build stub package
+        run: |
+          cd stub
+          sed -i -e "s/?????/${{ env.version_number }}/g" pyproject.toml
+          poetry build
+
+      - name: Push to PyPI
+        run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_TOKEN }}
