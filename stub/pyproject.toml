@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "asbestos-snow"
+version = "?????"
+packages = [{include = "empty"}]
+description = "asbestos-snow has moved to asbestos: https://pypi.org/project/asbestos/"
+authors = ["Joe Kaufeld <jkaufeld@spoton.com>", "SpotOn <opensource@spoton.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+asbestos = "?????"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
