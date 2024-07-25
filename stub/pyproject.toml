@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asbestos-snow"
-version = "?????"  # this will be replaced in the CI pipeline
+version = "__CI_PIPELINE_VERSION__"  # this will be replaced in the CI pipeline
 packages = [{include = "empty"}]
 description = "asbestos-snow has moved to asbestos: https://pypi.org/project/asbestos/"
 authors = ["Joe Kaufeld <jkaufeld@spoton.com>", "SpotOn <opensource@spoton.com>"]
@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-asbestos = "?????"  # this will be replaced in the CI pipeline
+asbestos = "__CI_PIPELINE_VERSION__"  # this will be replaced in the CI pipeline
 
 [build-system]
 requires = ["poetry-core"]

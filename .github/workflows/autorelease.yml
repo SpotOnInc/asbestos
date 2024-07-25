@@ -70,6 +70,6 @@ jobs:
       - name: Build & release stub package
         run: |
           cd stub
-          sed -i -e "s/?????/${{ env.version_number }}/g" pyproject.toml
+          sed -i -e "s/__CI_PIPELINE_VERSION__/${{ env.version_number }}/g" pyproject.toml
           poetry build
           poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_TOKEN }}
