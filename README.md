@@ -33,10 +33,8 @@ with snowflake_cursor() as cursor:
 ## Installation:
 
 ```shell
-poetry add asbestos-snow
+poetry add asbestos
 ```
-
-The installation name is slightly different from the usage name due to someone claiming the name with no releases on PyPI; with luck, we will be able to finish the name requisition process to be able to use `asbestos` soon. If you're interested, you can [see how well that's going here](https://github.com/pypi/support/issues/2621).
 
 ## Docs
 
