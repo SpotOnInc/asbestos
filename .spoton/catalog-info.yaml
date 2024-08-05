@@ -10,6 +10,7 @@ metadata:
     github.com/project-slug: spotoninc/asbestos
 
     spoton.com/domain: domain:default/payments
+    spoton.com/subdomain: domain:default/payment-operations
   tags:
     - python # language
   links:
