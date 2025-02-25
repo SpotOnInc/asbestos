@@ -166,8 +166,22 @@ class AsbestosConfig:
         return self.default_response
 
     def remove_query_by_sfqid(self, sfqid: int) -> bool:
-        """If you need to remove a specific registered query (ephemeral or not), pass
-        its `sfqid` in here. Returns True if the query was found and removed."""
+        """
+        > New in 1.6.0!
+
+        If you need to remove a specific registered query (ephemeral or not), pass
+        its `sfqid` in here. Returns True if the query was found and removed.
+
+        ```python
+        >>> query_id = config.register(query="A", response="B")
+        >>> len(config.query_map)
+        1  # one query registered
+        >>> config.remove_query_by_sfqid(query_id)
+        True  # the query was found and removed
+        >>> len(config.query_map)
+        0  # no queries left
+        ```
+        """
         # can't nuke the default
         if self.default_response.sfqid == sfqid:
             return False
