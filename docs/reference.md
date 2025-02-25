@@ -16,6 +16,12 @@
       show_root_heading: true
       show_source: false
 
+::: asbestos.asbestos.EphemeralContext
+    handler: python
+    options:
+      show_root_heading: true
+      show_source: false
+
 ::: asbestos.asbestos.AsbestosConn
     handler: python
     options:

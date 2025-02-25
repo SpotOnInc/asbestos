@@ -21,6 +21,46 @@ EXAMPLE_RESPONSE = "world"
 OVERRIDE_RESPONSE = None
 
 
+class EphemeralContext:
+    """
+    > New in 1.6.0!
+
+    Ephemeral queries are, by definition, single-use. However, ephemeral queries
+    that are paginated are not removed from the list until they are fully exhausted.
+
+    There are also situations where you may want to have regular queries behave
+    like ephemeral queries, only slightly longer-lasting. The EphemeralContext
+    context manager allows you to wrap a block of code and have all queries run
+    within it removed after the block is done.
+
+    ```python
+    >>> config.register(query="A", response="B")
+    >>> config.register(query="C", response="D")
+    >>> len(config.query_map)
+    2  # two queries registered
+    >>> with EphemeralContext(config):
+    >>>     with asbestos_cursor() as cursor:
+    >>>         cursor.execute("A")
+    >>>         cursor.fetchone()
+    "B"  # this is the response from the first query
+    >>> len(config.query_map)
+    1  # the query that was run has been removed, but the other remains
+    ```
+
+    This works for unlimited numbers of queries of any type.
+    """
+    def __init__(self, config:"AsbestosConfig") -> None:
+        self.config = config
+
+    def __enter__(self) -> "AsbestosCursor":
+        ...
+
+    def __exit__(self, *args: Any) -> None:
+        for query_id in set(self.config.ephemeral_context_ids):
+            self.config.remove_query_by_sfqid(query_id)
+        self.config.ephemeral_context_ids = []
+
+
 class AsbestosResponse:
     """
     Internal representation of queries, data, and responses.
@@ -37,7 +77,7 @@ class AsbestosResponse:
     def __init__(
         self,
         query: str,
-        response: dict[Any],
+        response: dict,
         ephemeral: bool = False,
         data: Optional[tuple[Any]] = None,
         force_pagination_size: Optional[int] = None,
@@ -93,6 +133,7 @@ class AsbestosConfig:
 
     def __init__(self) -> None:
         self.query_map: list[AsbestosResponse] = []
+        self.ephemeral_context_ids: list[int] = []
         self.last_run_query: Optional[AsbestosResponse] = None
         self.data = {}
         self.default_response: AsbestosResponse = AsbestosResponse(
@@ -346,6 +387,7 @@ class AsbestosCursor:
         resp = self.config.lookup_query(self.query, self.data)
         if remove_ephemeral:
             self.config.remove_ephemeral_response(resp)
+        self.config.ephemeral_context_ids.append(resp.sfqid)
         self.config.last_run_query = resp
         return OVERRIDE_RESPONSE if OVERRIDE_RESPONSE else resp.response
 

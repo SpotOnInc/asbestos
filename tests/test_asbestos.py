@@ -5,7 +5,7 @@ import pytest
 
 from asbestos import asbestos_cursor, config, conn
 import asbestos.asbestos
-from asbestos.asbestos import AsbestosConn, AsbestosCursor
+from asbestos.asbestos import AsbestosConn, AsbestosCursor, EphemeralContext
 from asbestos.exceptions import AsbestosDuplicateQuery, AsbestosMissingConfig
 
 QUERY = "query"
@@ -293,6 +293,19 @@ def test_fetchmany_local_size_overrides_arraysize() -> None:
         assert cursor.fetchmany(2) == [{"e": 5}]
 
 
+def test_fetchmany_local_size_overrides_arraysize() -> None:
+    config.register_ephemeral(
+        query=QUERY,
+        response=SHORT_BATCH_RESPONSE,
+    )
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        cursor.arraysize = 10
+        assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+        assert cursor.fetchmany(2) == [{"c": 3}, {"d": 4}]
+        assert cursor.fetchmany(2) == [{"e": 5}]
+
+
 def test_fetchmany_force_pagination_size() -> None:
     config.register(query=QUERY, response=SHORT_BATCH_RESPONSE, force_pagination_size=2)
     with asbestos_cursor() as cursor:
@@ -392,3 +405,62 @@ def test_fetchmany_after_other_call() -> None:
     with asbestos_cursor() as cursor:
         cursor.execute(QUERY2)
         assert cursor.fetchmany() == LARGE_BATCH_RESPONSE[: cursor.arraysize]
+
+
+def test_ephemeral_context() -> None:
+    config.register_ephemeral(query=QUERY, response=RESPONSE)
+    assert len(config.query_map) == 1
+    with EphemeralContext(config):
+        with asbestos_cursor() as cursor:
+            cursor.execute(QUERY)
+            assert cursor.fetchall() == RESPONSE
+    assert len(config.query_map) == 0
+
+
+def test_unfinished_paginated_query() -> None:
+    assert len(config.query_map) == 0
+    config.register_ephemeral(query=QUERY, response=LARGE_BATCH_RESPONSE)
+    with asbestos_cursor() as cursor:
+        cursor.execute(QUERY)
+        assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+    # the ephemeral query has not finished, so it should still be in the query map
+    assert len(config.query_map) == 1
+
+
+def test_unfinished_paginated_query_with_ephemeral_context() -> None:
+    assert len(config.query_map) == 0
+    config.register_ephemeral(query=QUERY, response=LARGE_BATCH_RESPONSE)
+    with EphemeralContext(config):
+        with asbestos_cursor() as cursor:
+            cursor.execute(QUERY)
+            assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+    # the ephemeral query has not finished, but thanks to the ephemeral context,
+    # it should have been removed from the query map
+    assert len(config.query_map) == 0
+
+
+def test_ephemeral_context_with_multiple_queries() -> None:
+    assert len(config.query_map) == 0
+    config.register(query=QUERY, response=LARGE_BATCH_RESPONSE)
+    config.register(query=QUERY2, response=SHORT_BATCH_RESPONSE)
+    with EphemeralContext(config):
+        with asbestos_cursor() as cursor:
+            cursor.execute(QUERY)
+            assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+            cursor.execute(QUERY2)
+            assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+    # the ephemeral queries have not finished, but thanks to the ephemeral context,
+    # they've been nuked
+    assert len(config.query_map) == 0
+
+
+def test_ephemeral_context_does_not_remove_uncalled_queries() -> None:
+    assert len(config.query_map) == 0
+    config.register(query=QUERY, response=LARGE_BATCH_RESPONSE)
+    config.register(query=QUERY2, response=SHORT_BATCH_RESPONSE)
+    with EphemeralContext(config):
+        with asbestos_cursor() as cursor:
+            cursor.execute(QUERY)
+            assert cursor.fetchmany(2) == [{"a": 1}, {"b": 2}]
+    # only one query was called, so only one query should have been removed
+    assert len(config.query_map) == 1
