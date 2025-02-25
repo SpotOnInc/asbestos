@@ -73,8 +73,9 @@ class AsbestosResponse:
 
         return value
 
-    def set_sfqid(self) -> None:
+    def set_sfqid(self) -> int:
         self.sfqid = random.randrange(10000, 60000)
+        return self.sfqid
 
 
 class AsbestosConfig:
@@ -123,6 +124,19 @@ class AsbestosConfig:
         # if we fall down here, we don't have anything that matches.
         return self.default_response
 
+    def remove_query_by_sfqid(self, sfqid: int) -> bool:
+        """If you need to remove a specific registered query (ephemeral or not), pass
+        its `sfqid` in here. Returns True if the query was found and removed."""
+        # can't nuke the default
+        if self.default_response.sfqid == sfqid:
+            return False
+
+        for i, option in enumerate(self.query_map):
+            if option.sfqid == sfqid:
+                self.query_map.pop(i)
+                return True
+        return False
+
     def remove_ephemeral_response(self, resp: AsbestosResponse) -> None:
         # Ephemeral queries are only good for one call. Remove it from the list so that
         # it can't show up again.
@@ -151,7 +165,7 @@ class AsbestosConfig:
         response: dict,
         data: tuple = None,
         force_pagination_size: int = None,
-    ) -> None:
+    ) -> int:
         """
         Asbestos will watch for any call that includes the query passed in
         and return the response you save. If data is provided with the query,
@@ -209,17 +223,22 @@ class AsbestosConfig:
         {'a': 1}  # because we overrode the value when registering
 
         ```
+
+        Registering a query will return the `sfqid` of the query that was just
+        registered. This can be used later with `get_results_from_sfqid()`
+        and `remove_query_by_sfqid()` to manipulate the query after it's been
+        registered.
         """
         self.check_for_duplicates(query=query, data=data, ephemeral=False)
-        self.query_map.append(
-            AsbestosResponse(
-                query=query,
-                data=data,
-                response=response,
-                ephemeral=False,
-                force_pagination_size=force_pagination_size,
-            )
+        new_query = AsbestosResponse(
+            query=query,
+            data=data,
+            response=response,
+            ephemeral=False,
+            force_pagination_size=force_pagination_size,
         )
+        self.query_map.append(new_query)
+        return new_query.sfqid
 
     def register_ephemeral(
         self,
@@ -227,22 +246,22 @@ class AsbestosConfig:
         response: dict,
         data: tuple = None,
         force_pagination_size: int = None,
-    ) -> None:
+    ) -> int:
         """
         Works the same way as `AsbestosConfig.register()` with the only difference being
         that after this query is called, it is removed from the list. This can be used
         for tests or other situations where you need a call to succeed only once.
         """
         self.check_for_duplicates(query=query, data=data, ephemeral=True)
-        self.query_map.append(
-            AsbestosResponse(
-                query=query,
-                data=data,
-                response=response,
-                ephemeral=True,
-                force_pagination_size=force_pagination_size,
-            )
+        new_query = AsbestosResponse(
+            query=query,
+            data=data,
+            response=response,
+            ephemeral=True,
+            force_pagination_size=force_pagination_size,
         )
+        self.query_map.append(new_query)
+        return new_query.sfqid
 
     def clear_queries(self) -> None:
         """Remove all the registered queries and responses."""

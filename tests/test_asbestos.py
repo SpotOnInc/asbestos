@@ -1,4 +1,5 @@
 from typing import Any, Callable
+from unittest.mock import patch
 
 import pytest
 
@@ -108,6 +109,35 @@ def test_fetchone_actually_fetches_one() -> None:
     with asbestos_cursor() as cursor:
         cursor.execute(QUERY)
         assert cursor.fetchone() == RESPONSE[0]
+
+
+def test_register_returns_sfqid() -> None:
+    with patch("asbestos.asbestos.random.randrange", lambda x, y: 999):
+        sfqid = config.register(query=QUERY, response=RESPONSE)
+        assert sfqid == 999
+
+
+def test_register_ephemeral_returns_sfqid() -> None:
+    with patch("asbestos.asbestos.random.randrange", lambda x, y: 999):
+        sfqid = config.register_ephemeral(query=QUERY, response=RESPONSE)
+        assert sfqid == 999
+
+
+def test_remove_query_by_sfqid() -> None:
+    query_id = config.register(query=QUERY, response=RESPONSE)
+    assert type(query_id) == int
+    assert len(config.query_map) == 1
+
+    result = config.remove_query_by_sfqid(query_id)
+    assert result is True
+    assert len(config.query_map) == 0
+
+
+def test_removing_nonexistent_query() -> None:
+    assert len(config.query_map) == 0
+    result = config.remove_query_by_sfqid(999)
+    assert result is False
+    assert len(config.query_map) == 0
 
 
 def test_query_with_data() -> None:
