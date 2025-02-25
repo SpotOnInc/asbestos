@@ -52,18 +52,18 @@ known_third_party = ["pytest"]
 python_files = "tests.py test_*.py"
 
 [tool.ruff]
+line-length = 90
 exclude = [
     ".git",
     ".venv",
 ]
-ignore = [
+lint.ignore = [
     "ANN002",
     "ANN003",
     "ANN101",
     "ANN401",
 ]
-line-length = 90
-select = [
+lint.select = [
     "ANN",
     "C9",
     "E",
@@ -71,5 +71,5 @@ select = [
     "W",
 ]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 8

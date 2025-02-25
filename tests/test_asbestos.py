@@ -125,7 +125,7 @@ def test_register_ephemeral_returns_sfqid() -> None:
 
 def test_remove_query_by_sfqid() -> None:
     query_id = config.register(query=QUERY, response=RESPONSE)
-    assert type(query_id) == int
+    assert isinstance(query_id, int)
     assert len(config.query_map) == 1
 
     result = config.remove_query_by_sfqid(query_id)
@@ -293,7 +293,7 @@ def test_fetchmany_local_size_overrides_arraysize() -> None:
         assert cursor.fetchmany(2) == [{"e": 5}]
 
 
-def test_fetchmany_local_size_overrides_arraysize() -> None:
+def test_fetchmany_local_size_overrides_arraysize_ephemeral() -> None:
     config.register_ephemeral(
         query=QUERY,
         response=SHORT_BATCH_RESPONSE,

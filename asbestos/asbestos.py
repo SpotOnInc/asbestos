@@ -49,11 +49,11 @@ class EphemeralContext:
 
     This works for unlimited numbers of queries of any type.
     """
-    def __init__(self, config:"AsbestosConfig") -> None:
+
+    def __init__(self, config: "AsbestosConfig") -> None:
         self.config = config
 
-    def __enter__(self) -> "AsbestosCursor":
-        ...
+    def __enter__(self) -> "AsbestosCursor": ...
 
     def __exit__(self, *args: Any) -> None:
         for query_id in set(self.config.ephemeral_context_ids):

@@ -25,5 +25,5 @@ jobs:
       run: poetry install
     - name: Run Static Analysis
       run: |
-        poetry run ruff asbestos tests
+        poetry run ruff check asbestos tests
         poetry run black --check .
