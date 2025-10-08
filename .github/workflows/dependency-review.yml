@@ -6,7 +6,7 @@ permissions:
   pull-requests: write
 jobs:
   dependency-review:
-    runs-on: medium
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
