@@ -13,5 +13,6 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v3
         with:
-          config-file: spotoninc/copier-github-security-workflow/dependency-review-config.yml@main  # Centralized config for all repositories maintained by InfoSec
-          external-repo-token: ${{ secrets.ADMIN_GITHUB_TOKEN }} # Used to access external config file
+          fail-on-severity: 'high'
+          vulnerability-check: true
+          comment-summary-in-pr: on-failure
